@@ -1,0 +1,9 @@
+"0","#| label: carga-datos"
+"0","#| warning: false"
+"0","#| code-fold: true"
+"0",""
+"0","# Carga de datos"
+"0","datos <- read_delim(""datos/Resul_Fin_2Grupos_SinReplicas_csv_Fix.csv"")"
+"2","Error in read_delim(""datos/Resul_Fin_2Grupos_SinReplicas_csv_Fix.csv"") : 
+  could not find function ""read_delim""
+"

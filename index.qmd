@@ -1,0 +1,110 @@
+---
+title: "FIESTA"
+format: 
+  html:
+    lang: es
+    theme: yeti
+---
+
+# Carga de paquetes
+```{r}
+#| label: carga-paquetes
+#| warning: false
+#| code-fold: true
+
+# Carga de paquetes de R
+library(tidyverse)
+library(DT)
+library(janitor)
+library(FIESTA)
+```
+
+# Carga y limpieza de datos
+```{r}
+#| label: carga-datos
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+# Rutas
+ruta_puntos <- "datos/Resul_Fin_2Grupos_SinReplicas_csv_Fix.csv"
+
+# Carga de datos de puntos de muestreo
+puntos <- read_delim(ruta_puntos)
+
+# Limpieza de los nombres de columnas
+puntos <- clean_names(puntos)
+
+# Despliegue de los datos de puntos de muestreo en una tabla
+puntos |>
+	select(plot_id, sample_id) |>
+  datatable(
+  	caption = "Puntos de muestreo de cobertura y uso de la tierra",
+  	rownames = FALSE,
+  	colnames = c("plot_id", "sample_id"),
+    options = list(
+      pageLength = 5,
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+    )
+  )
+```
+
+## Puntos por parcela
+```{r}
+#| label: conteo-muestras-parcela
+#| warning: false
+#| code-fold: true
+
+# Conteo de muestras por parcela
+puntos |>
+	group_by(plot_id) |>
+	summarize(cantidad_puntos = n()) |>
+  datatable(
+  	rownames = FALSE,
+    options = list(
+      pageLength = 5,
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+    )
+  )
+```
+
+## Proporción de clases de cobertura por parcela
+```{r}
+#| label: proporcion-clases-parcela
+#| warning: false
+#| code-fold: true
+
+proporcion_clases_parcela <-
+	puntos |>
+	group_by(plot_id, t1_cobertura) |>
+	summarize(n = n()) |>
+  datatable(
+  	rownames = FALSE,
+    options = list(
+      pageLength = 5,
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+    )
+  )
+
+proporcion_clases_parcela
+```
+
+
+```{r}
+#| label: configuracion
+#| include: false
+
+tiempos = 3
+
+uso = TRUE
+
+campo_uso_t1 = "xxx"
+campo_uso_t2 = "yyy"
+campo_uso_t3 = "zzz"
+
+cobertura = FALSE
+
+campo_cobertura_t1 = ""
+campo_cobertura_t2 = ""
+campo_cobertura_t3 = ""
+```
