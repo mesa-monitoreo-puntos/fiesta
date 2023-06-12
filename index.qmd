@@ -4,107 +4,369 @@ format:
   html:
     lang: es
     theme: yeti
+    toc: true
 ---
 
-# Carga de paquetes
-```{r}
-#| label: carga-paquetes
-#| warning: false
-#| code-fold: true
+# Resumen
+FIESTA es un paquete de R para análisis de datos de inventarios forestales basados en muestras. Es desarrollado por el Programa de Inventario y Análisis Forestal (FIA, por sus siglas en inglés) del Servicio Forestal del Departamento de Agricultura de los Estados Unidos.
 
-# Carga de paquetes de R
-library(tidyverse)
-library(DT)
-library(janitor)
+# Introducción
+Este documento describe el procesamiento, mediante FIESTA, de un conjunto de datos de parcelas de monitoreo, ubicadas en la zona norte de Costa Rica.
+
+# Trabajo previo
+
+## Instalación de software
+
+### Sistema base de R y herramientas de desarrollo
+Para trabajar con FIESTA debe instalar:
+
+- [El sistema base de R](https://www.r-project.org/).
+- Un ambiente para desarrollo para R como, por ejemplo, [RStudio Desktop](https://posit.co/download/rstudio-desktop/). RStudio proporciona un editor de texto y herramientas para depurar programas y visualizar sus resultados, entre otras facilidades.
+
+Puede utilizar otros ambientes de desarrollo. Una opción muy popular en la actualidad es [Visual Studio Code](https://code.visualstudio.com/).
+
+#### Versión mínima de R
+De acuerdo con su documentación, la versión mínima de R que requiere FIESTA, a la fecha de escritura de este documento (2023-09-11), es la 4.2.0. Puede consultar la versión que tiene instalada al ejecutar el siguiente comando en la consola de R:
+
+```{r}
+#| label: version-r
+#| warning: false
+#| message: false
+
+# Versión de R
+R.version.string
+```
+
+La salida del comando anterior debe indicar que su versión de R es mayor o igual a 4.2.0.
+
+### Paquetes de R
+
+#### FIESTA
+El paquete FIESTA está disponible en Para usar FIESTA, el paquete debe instalarse primero en una interfaz de R. Puede utilizar la función `install.packages()`:
+
+```{r}
+#| label: instalacion-paquetes-fiesta
+#| eval: false
+#| warning: false
+#| message: false
+
+# Instalación del paquete FIESTA
+install.packages("FIESTA")
+```
+
+El resultado de la instalación puede verificarse al cargar el paquete con la función `library()`.
+
+```{r}
+#| label: carga-paquetes-fiesta
+#| warning: false
+#| message: false
+
+# Carga del paquete FIESTA
 library(FIESTA)
 ```
 
-# Carga y limpieza de datos
+Si el comando anterior no genera ningún mensaje de error, el paquete FIESTA debe haberse instalado adecuadamente.
+
+#### Otros
+Además de FIESTA, se recomienda instalar los siguientes paquetes para procesamiento de datos y visualización de resultados.
+
 ```{r}
-#| label: carga-datos
+#| label: instalacion-paquetes-otros
+#| eval: false
+#| warning: false
+#| message: false
+
+# Paquete para el desarrollo de documentos computacionales
+install.packages("rmarkdown")
+
+# Colección de paquetes para análisis de datos
+install.packages("tidyverse")
+
+# Estilos para gráficos de tidyverse
+install.packages("ggthemes")
+
+# Paquete para limpieza de datos
+install.packages("janitor")
+
+# Paquete para tablas interactivas
+install.packages("DT")
+
+# Paquete para graficación interactiva
+install.packages("plotly")
+
+# Paquete para gráficos de Sankey
+install.packages("networkD3")
+
+# Paquete para mapas interactivos
+install.packages("leaflet")
+
+# Funciones adicionales para leaflet
+install.packages("leaflet.extras")
+
+# Funciones adicionales para leaflet
+install.packages("leafem")
+```
+
+Luego de instalarlos, debe cargar los paquetes con la función `library()`.
+
+```{r}
+#| label: carga-paquetes-otros
+#| warning: false
+#| message: false
+
+# Carga de paquetes adicionales
+library(rmarkdown)
+library(tidyverse)
+library(ggthemes)
+library(janitor)
+library(DT)
+library(plotly)
+library(networkD3)
+library(leaflet)
+library(leaflet.extras)
+library(leafem)
+library(sf) # se instala con FIESTA
+```
+
+# Datos de puntos de muestreo
+
+## Carga y limpieza
+Los datos de puntos de muestreo se cargan de un archivo CSV y los nombres de las columnas se "limpian" para evitar números al inicio y otros problemas que dificultan su manejo.
+
+```{r}
+#| label: carga-datos-puntos-muestreo
 #| warning: false
 #| message: false 
-#| code-fold: true
+#| code-fold: show
 
-# Rutas
-ruta_puntos <- "datos/Resul_Fin_2Grupos_SinReplicas_csv_Fix.csv"
+# Ruta a los datos
+ruta_archivo_puntos <- "datos/Resul_Fin_2Grupos_SinReplicas_csv_Fix.csv"
 
 # Carga de datos de puntos de muestreo
-puntos <- read_delim(ruta_puntos)
+puntos <- read_delim(ruta_archivo_puntos)
 
 # Limpieza de los nombres de columnas
 puntos <- clean_names(puntos)
 
+# Coversión a de t1_cobertura y t2_cobertura a factores
+puntos <-
+	puntos |>
+	mutate(
+		t1_cobertura = factor(t1_cobertura, levels = unique(t1_cobertura)),
+		t2_cobertura = factor(t2_cobertura, levels = unique(t2_cobertura))
+	)
+```
+
+## Tabla
+
+```{r}
+#| label: tabla-datos-puntos-muestreo
+#| warning: false
+#| message: false 
+#| code-fold: true
+
 # Despliegue de los datos de puntos de muestreo en una tabla
 puntos |>
-	select(plot_id, sample_id) |>
-  datatable(
-  	caption = "Puntos de muestreo de cobertura y uso de la tierra",
-  	rownames = FALSE,
-  	colnames = c("plot_id", "sample_id"),
-    options = list(
-      pageLength = 5,
-      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
-    )
-  )
+	select(plot_id, sample_id, t1_cobertura, t2_cobertura) |>
+	datatable(
+		caption = "Puntos de muestreo de cobertura y uso de la tierra",
+		rownames = FALSE,
+		colnames = c("plot_id", "sample_id", "t1_cobertura", "t2_cobertura"),
+		options = list(
+			pageLength = 5,
+			language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+		)
+	)
 ```
 
-## Puntos por parcela
+## Gráficos de distribución de cobertura en t1
+
 ```{r}
-#| label: conteo-muestras-parcela
+#| label: grafico-barras-distribucion-t1
 #| warning: false
+#| message: false 
 #| code-fold: true
 
-# Conteo de muestras por parcela
-puntos |>
-	group_by(plot_id) |>
-	summarize(cantidad_puntos = n()) |>
-  datatable(
-  	rownames = FALSE,
-    options = list(
-      pageLength = 5,
-      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
-    )
-  )
-```
-
-## Proporción de clases de cobertura por parcela
-```{r}
-#| label: proporcion-clases-parcela
-#| warning: false
-#| code-fold: true
-
-proporcion_clases_parcela <-
+# Gráfico de barras ggplot2
+grafico_barras <-
 	puntos |>
-	group_by(plot_id, t1_cobertura) |>
-	summarize(n = n()) |>
+	ggplot(aes(x = fct_infreq(t1_cobertura))) +
+	geom_bar(
+    aes(
+      text = paste0(
+        "Cantidad de puntos: ", after_stat(count)
+      )		
+    )
+	) +
+	ggtitle("Distribución de cobertura en t1") +
+	xlab("Cobertura") +
+	ylab("Cantidad de puntos") +
+	theme_clean() +
+	theme(axis.text.x = element_text(angle = 45, hjust = 1))	
+
+# Gráfico de barras plotly
+ggplotly(grafico_barras, tooltip = "text") |> 
+  config(locale = 'es')
+```
+
+```{r}
+#| label: grafico-pastel-distribucion-t1
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+# Total de puntos
+conteo <- puntos |>
+	count(t1_cobertura)
+
+# Gráfico de pastel plotly
+plot_ly(conteo, labels = ~ t1_cobertura, values = ~ n) |>
+	add_pie() |>
+	layout(title = "Distribución de cobertura en t1")
+```
+
+## Gráficos de distribución de cobertura en t2
+
+```{r}
+#| label: grafico-barras-distribucion-t2
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+# Gráfico de barras ggplot2
+grafico_barras <-
+	puntos |>
+	ggplot(aes(x = fct_infreq(t2_cobertura))) +
+	geom_bar(
+    aes(
+      text = paste0(
+        "Cantidad de puntos: ", after_stat(count)
+      )		
+    )
+	) +
+	ggtitle("Distribución de cobertura en t2") +
+	xlab("Cobertura") +
+	ylab("Cantidad de puntos") +
+	theme_clean() +
+	theme(axis.text.x = element_text(angle = 45, hjust = 1))	
+
+# Gráfico de barras plotly
+ggplotly(grafico_barras, tooltip = "text") |> 
+  config(locale = 'es')
+```
+
+```{r}
+#| label: grafico-pastel-distribucion-t2
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+# Total de puntos
+conteo <- puntos |>
+	count(t2_cobertura)
+
+# Gráfico de pastel plotly
+plot_ly(conteo, labels = ~ t2_cobertura, values = ~ n) |>
+	add_pie() |>
+	layout(title = "Distribución de cobertura en t1")
+```
+
+## Mapa
+```{r}
+#| label: mapa-puntos-muestreo
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+geo_puntos <-
+	puntos |>
+	select(plot_id, sample_id, lon, lat, t1_cobertura, t2_cobertura) |>
+	st_as_sf(
+		coords = c("lon", "lat"),
+		crs = 4326
+  )
+
+leaflet() |>
+	addTiles(group = "OSM") |>
+	addProviderTiles(
+		provider = providers$Esri.WorldImagery, 
+		group = "ESRI World Imagery"
+	) |>
+	addCircleMarkers(
+		data = geo_puntos,
+		radius = 0.05,
+		clusterOptions = markerClusterOptions(),
+    popup = paste(
+      paste0("<strong>Parcela: </strong>", geo_puntos$plot_id),
+      paste0("<strong>Muestra: </strong>", geo_puntos$sample_id),
+      paste0("<strong>Cobertura en t1: </strong>", geo_puntos$t1_cobertura),
+      paste0("<strong>Cobertura en t2: </strong>", geo_puntos$t2_cobertura),
+      sep = '<br/>'
+    ),		
+	) |>
+	addLayersControl(
+		baseGroups = c("OSM", "ESRI World Imagery")
+	)
+
+```
+
+
+# Cálculos con FIESTA
+
+## Porcentajes de coberturas por parcela en t1 y t2
+
+### t1
+```{r}
+#| label: transposicion-puntos-porcentajes_t1
+#| warning: false
+#| message: false 
+
+# Transposición de datos de puntos a porcentajes de coberturas por parcela en t1
+pctfrompnt_t1 <- datPBpnt2pct(puntos, uniqueid="plot_id", tvar="t1_cobertura")
+```
+
+```{r}
+#| label: tabla-transposicion-puntos-porcentajes_t1
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+# Despliegue de la transposición de puntos a porcentajes en t1
+pctfrompnt_t1 |>
   datatable(
+  	caption = "Porcentajes de coberturas por parcela en t1",
   	rownames = FALSE,
     options = list(
       pageLength = 5,
       language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
     )
   )
-
-proporcion_clases_parcela
 ```
 
+### t2
+```{r}
+#| label: transposicion-puntos-porcentajes_t2
+#| warning: false
+#| message: false 
+
+# Transposición de datos de puntos a porcentajes de coberturas por parcela en t2
+pctfrompnt_t2 <- datPBpnt2pct(puntos, uniqueid="plot_id", tvar="t2_cobertura")
+```
 
 ```{r}
-#| label: configuracion
-#| include: false
+#| label: tabla-transposicion-puntos-porcentajes_t2
+#| warning: false
+#| message: false 
+#| code-fold: true
 
-tiempos = 3
-
-uso = TRUE
-
-campo_uso_t1 = "xxx"
-campo_uso_t2 = "yyy"
-campo_uso_t3 = "zzz"
-
-cobertura = FALSE
-
-campo_cobertura_t1 = ""
-campo_cobertura_t2 = ""
-campo_cobertura_t3 = ""
+# Despliegue de la transposición de puntos a porcentajes en t2
+pctfrompnt_t2 |>
+  datatable(
+  	caption = "Porcentajes de coberturas por parcela en t2",
+  	rownames = FALSE,
+    options = list(
+      pageLength = 5,
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+    )
+  )
 ```
