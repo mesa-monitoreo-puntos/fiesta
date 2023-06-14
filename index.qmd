@@ -8,22 +8,24 @@ format:
 ---
 
 # Resumen
-FIESTA es un paquete de R para análisis de datos de inventarios forestales basados en muestras. Es desarrollado por el Programa de Inventario y Análisis Forestal (FIA, por sus siglas en inglés) del Servicio Forestal del Departamento de Agricultura de los Estados Unidos.
+FIESTA es un paquete de R para análisis de datos de inventarios forestales basados en muestras. Este documento describe el procesamiento, mediante FIESTA, de un conjunto de datos de parcelas de monitoreo, ubicadas en la zona norte de Costa Rica.
 
 # Introducción
-Este documento describe el procesamiento, mediante FIESTA, de un conjunto de datos de parcelas de monitoreo, ubicadas en la zona norte de Costa Rica.
+FIESTA (*Forest Inventory Estimation and Analysis*) es una biblioteca de software, desarrollada en el lenguaje de programación R, para el análisis de datos de inventarios forestales basados en muestras. Es desarrollada por el Programa de Inventario y Análisis Forestal (FIA, por sus siglas en inglés) del Servicio Forestal del Departamento de Agricultura de los Estados Unidos.
+
+Este documento describe el procesamiento, mediante FIESTA, de un conjunto de datos de 26125 puntos de muestreo de 1045 parcelas de monitoreo, ubicadas en la zona norte de Costa Rica. 
+
+En las secciones siguientes, se detalla el proceso de instalación de FIESTA y otros paquetes de R.
 
 # Trabajo previo
 
 ## Instalación de software
 
 ### Sistema base de R y herramientas de desarrollo
-Para trabajar con FIESTA debe instalar:
+Para trabajar con FIESTA, se debe instalar:
 
-- [El sistema base de R](https://www.r-project.org/).
-- Un ambiente para desarrollo para R como, por ejemplo, [RStudio Desktop](https://posit.co/download/rstudio-desktop/). RStudio proporciona un editor de texto y herramientas para depurar programas y visualizar sus resultados, entre otras facilidades.
-
-Puede utilizar otros ambientes de desarrollo. Una opción muy popular en la actualidad es [Visual Studio Code](https://code.visualstudio.com/).
+- El [sistema base de R](https://www.r-project.org/). R es un lenguaje de programación enfocado en análisis estadístico y visualización de datos.
+- La interfaz de desarrollo integrada [RStudio Desktop](https://posit.co/download/rstudio-desktop/), la cual proporciona un editor de texto y otras herramientas para escribir programas en R y visualizar sus resultados, entre otras facilidades.
 
 #### Versión mínima de R
 De acuerdo con su documentación, la versión mínima de R que requiere FIESTA, a la fecha de escritura de este documento (2023-09-11), es la 4.2.0. Puede consultar la versión que tiene instalada al ejecutar el siguiente comando en la consola de R:
@@ -42,7 +44,9 @@ La salida del comando anterior debe indicar que su versión de R es mayor o igua
 ### Paquetes de R
 
 #### FIESTA
-El paquete FIESTA está disponible en Para usar FIESTA, el paquete debe instalarse primero en una interfaz de R. Puede utilizar la función `install.packages()`:
+El paquete [FIESTA](https://cran.r-project.org/package=FIESTA) está disponible en [CRAN (Comprehensive R Archive Network)](https://cran.r-project.org/), un repositorio en línea que alberga una amplia colección de paquetes y extensiones para el lenguaje de programación R, lo que facilita su instalación y actualización a nuevas versiones.
+
+Para usar FIESTA, debe instalarse primero en una interfaz de R. Puede utilizar la función `install.packages()`.
 
 ```{r}
 #| label: instalacion-paquetes-fiesta
@@ -65,7 +69,7 @@ El resultado de la instalación puede verificarse al cargar el paquete con la fu
 library(FIESTA)
 ```
 
-Si el comando anterior no genera ningún mensaje de error, el paquete FIESTA debe haberse instalado adecuadamente.
+Si el comando anterior no genera ningún mensaje de error, FIESTA debe haberse instalado adecuadamente.
 
 #### Otros
 Además de FIESTA, se recomienda instalar los siguientes paquetes para procesamiento de datos y visualización de resultados.
@@ -126,9 +130,30 @@ library(leaflet)
 library(leaflet.extras)
 library(leafem)
 library(sf) # se instala con FIESTA
+library(viridisLite)
 ```
 
+## Obtención de este repositorio
+Este documento forma parte de un repositorio en [GitHub](https://github.com/), una plataforma en línea para compartir código fuente de aplicaciones, basada en el sistema de control de versiones [Git](https://git-scm.com/). El repositorio contiene el código fuente del documento y los datos que se utilizan en los ejemplos. Su dirección es [https://github.com/mesa-monitoreo-puntos/fiesta](https://github.com/mesa-monitoreo-puntos/fiesta).
+
+Puede descargar el repositorio, como un archivo ZIP, de [https://github.com/mesa-monitoreo-puntos/fiesta/archive/refs/heads/main.zip](https://github.com/mesa-monitoreo-puntos/fiesta/archive/refs/heads/main.zip)
+
+También puede "clonarlo" mediante el comando `clone` de Git:
+
+```shell
+# Clonación de este repositorio
+git clone https://github.com/mesa-monitoreo-puntos/fiesta.git
+```
+
+Una vez que el repositorio haya sido descargado o clonado, puede abrirse con RStudio o con otra herramienta de desarrollo.
+
 # Datos de puntos de muestreo
+El conjunto de datos que se utiliza en este documento para ilustrar el uso de FIESTA es el producto de la interpretación de 1045 parcelas en la zona norte de Costa Rica. Cada parcela contiene 25 puntos, por lo que el total de puntos es 26125. Cada punto se interpretó, mediante imágenes satelitales, en dos tiempos:
+
+- Tiempo 1 (t1): entre 2005 y 2007.
+- Tiempo 2 (t2): en 2019.
+
+La interpretación fue realizada por un equipo de 26 personas de diferentes instituciones y organizaciones.
 
 ## Carga y limpieza
 Los datos de puntos de muestreo se cargan de un archivo CSV y los nombres de las columnas se "limpian" para evitar números al inicio y otros problemas que dificultan su manejo.
@@ -278,6 +303,7 @@ plot_ly(conteo, labels = ~ t2_cobertura, values = ~ n) |>
 #| message: false 
 #| code-fold: true
 
+# Conversión de datos de puntos de muestreo a objeto sf (vectorial de puntos)
 geo_puntos <-
 	puntos |>
 	select(plot_id, sample_id, lon, lat, t1_cobertura, t2_cobertura) |>
@@ -286,16 +312,38 @@ geo_puntos <-
 		crs = 4326
   )
 
+# Paleta de colores basado en los valores únicos de t1_cobertura
+colores_t1 <- colorFactor(
+  palette = viridis(length(unique(geo_puntos$t1_cobertura))), 
+  domain = geo_puntos$t1_cobertura
+)
+
+# Paleta de colores basado en los valores únicos de t2_cobertura
+colores_t2 <- colorFactor(
+  palette = viridis(length(unique(geo_puntos$t2_cobertura))), 
+  domain = geo_puntos$t2_cobertura
+)
+
 leaflet() |>
 	addTiles(group = "OSM") |>
 	addProviderTiles(
 		provider = providers$Esri.WorldImagery, 
 		group = "ESRI World Imagery"
 	) |>
+	addProviderTiles(
+		provider = providers$Stamen.TonerLite, 
+		group = "Stamen"
+	) |>	
+	addProviderTiles(
+		provider = providers$CartoDB.DarkMatter,
+		group = "Dark Matter"
+	) |>		
 	addCircleMarkers(
 		data = geo_puntos,
-		radius = 0.05,
-		clusterOptions = markerClusterOptions(),
+		radius = 4,
+		fillColor = ~colores_t1(geo_puntos$t1_cobertura),
+		color = ~colores_t1(geo_puntos$t1_cobertura),		
+		# clusterOptions = markerClusterOptions(),
     popup = paste(
       paste0("<strong>Parcela: </strong>", geo_puntos$plot_id),
       paste0("<strong>Muestra: </strong>", geo_puntos$sample_id),
@@ -303,9 +351,40 @@ leaflet() |>
       paste0("<strong>Cobertura en t2: </strong>", geo_puntos$t2_cobertura),
       sep = '<br/>'
     ),		
+		group = "Cobertura en t1"
 	) |>
+  addLegend(
+    position = "bottomleft",    
+    pal = colores_t1,
+    values = geo_puntos$t1_cobertura,
+    title = "Cobertura en t1",
+    group = "Cobertura en t1"    
+  ) |> 		
+	addCircleMarkers(
+		data = geo_puntos,
+		radius = 4,
+		fillColor = ~colores_t2(geo_puntos$t2_cobertura),
+		color = ~colores_t2(geo_puntos$t2_cobertura),		
+		# clusterOptions = markerClusterOptions(),
+    popup = paste(
+      paste0("<strong>Parcela: </strong>", geo_puntos$plot_id),
+      paste0("<strong>Muestra: </strong>", geo_puntos$sample_id),
+      paste0("<strong>Cobertura en t1: </strong>", geo_puntos$t1_cobertura),
+      paste0("<strong>Cobertura en t2: </strong>", geo_puntos$t2_cobertura),
+      sep = '<br/>'
+    ),		
+		group = "Cobertura en t2"
+	) |>	
+  addLegend(
+    position = "bottomleft",    
+    pal = colores_t2,
+    values = geo_puntos$t2_cobertura,
+    title = "Cobertura en t2",
+    group = "Cobertura en t2"    
+  ) |> 	
 	addLayersControl(
-		baseGroups = c("OSM", "ESRI World Imagery")
+		baseGroups = c("OSM", "ESRI World Imagery", "Stamen", "Dark Matter"),
+		overlayGroups = c("Cobertura en t1", "Cobertura en t2"),
 	)
 
 ```
@@ -317,7 +396,7 @@ leaflet() |>
 
 ### t1
 ```{r}
-#| label: transposicion-puntos-porcentajes_t1
+#| label: transposicion-puntos-porcentajes-t1
 #| warning: false
 #| message: false 
 
@@ -326,7 +405,7 @@ pctfrompnt_t1 <- datPBpnt2pct(puntos, uniqueid="plot_id", tvar="t1_cobertura")
 ```
 
 ```{r}
-#| label: tabla-transposicion-puntos-porcentajes_t1
+#| label: tabla-transposicion-puntos-porcentajes-t1
 #| warning: false
 #| message: false 
 #| code-fold: true
@@ -345,7 +424,7 @@ pctfrompnt_t1 |>
 
 ### t2
 ```{r}
-#| label: transposicion-puntos-porcentajes_t2
+#| label: transposicion-puntos-porcentajes-t2
 #| warning: false
 #| message: false 
 
@@ -354,7 +433,7 @@ pctfrompnt_t2 <- datPBpnt2pct(puntos, uniqueid="plot_id", tvar="t2_cobertura")
 ```
 
 ```{r}
-#| label: tabla-transposicion-puntos-porcentajes_t2
+#| label: tabla-transposicion-puntos-porcentajes-t2
 #| warning: false
 #| message: false 
 #| code-fold: true
@@ -369,4 +448,207 @@ pctfrompnt_t2 |>
       language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
     )
   )
+```
+
+## Distribución de coberturas en t1 y t2
+
+```{r}
+#| label: modpbpop
+#| warning: false
+#| message: false
+
+PBpopdat <- modPBpop(pnt = puntos,
+	pltassgnid = "plot_id",
+	pntid = "sample_id")
+```
+
+### t1
+```{r}
+#| label: distribucion-coberturas-t1
+#| warning: false
+#| message: false
+
+# Cálculo de la distribución de coberturas en t1
+LCt1 <- modPB(PBpopdat = PBpopdat, rowvar = "t1_cobertura")
+
+results.LCt1 <- LCt1$est
+```
+
+```{r}
+#| label: tabla-distribucion-coberturas-t1
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+# Despliegue de la distribución de coberturas en t1
+results.LCt1 |>
+  datatable(
+  	caption = "Distribución de coberturas en t1",
+  	rownames = FALSE,
+    options = list(
+      pageLength = 5,
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+    )
+  )
+```
+
+### t2
+```{r}
+#| label: distribucion-coberturas-t2
+#| warning: false
+#| message: false
+
+# Cálculo de la distribución de coberturas en t2
+LCt2 <- modPB(PBpopdat = PBpopdat, rowvar = "t2_cobertura")
+
+results.LCt2 <- LCt2$est
+```
+
+```{r}
+#| label: tabla-distribucion-coberturas-t2
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+# Despliegue de la distribución de coberturas en t2
+results.LCt2 |>
+  datatable(
+  	caption = "Distribución de coberturas en t2",
+  	rownames = FALSE,
+    options = list(
+      pageLength = 5,
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+    )
+  )
+```
+
+## Cobertura en t1 vs cobertura en t2
+
+```{r}
+#| label: cobertura-t1-vs-cobertura-t2
+#| warning: false
+#| message: false 
+
+PBpoparea <- 
+	modPBpop(
+	  pnt = puntos,
+	  pltassgnid = "plot_id",
+	  pntid = "sample_id",
+	  unitarea = 1
+  )
+
+# Cobertura en t1 vs cobertura en t2
+coberT1vT2 <- 
+	modPB(
+		PBpopdat = PBpoparea,
+	  rowvar = "t1_cobertura",
+	  colvar = "t2_cobertura"
+	)
+```
+
+```{r}
+#| label: tabla-cobertura-t1-vs-cobertura-t2
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+# Despliegue de datos en una tabla
+coberT1vT2$est |>
+  datatable(
+  	caption = "Cobertura en t1 vs cobertura en t2",
+  	rownames = FALSE,
+    options = list(
+      pageLength = 6,
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+    )
+  )
+```
+
+```{r}
+#| label: grafico-lineas-cobertura-t1-vs-cobertura-t2
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+LCt1.extract <- data.frame(LCt1$est$t1_cobertura, LCt1$est$Estimate)
+Year2006 <- as.data.frame(c(2006, 2006, 2006, 2006, 2006, 2006))
+names(Year2006)[1] <- "Year"
+LCt1.extract <- data.frame(LCt1.extract, Year2006)
+names(LCt1.extract)[1] <- "Variable"
+names(LCt1.extract)[2] <- "Value"
+
+LCt2.extract <- data.frame(LCt2$est$t2_cobertura, LCt2$est$Estimate)
+Year2019 <- as.data.frame(c(2019, 2019, 2019, 2019, 2019, 2019))
+names(Year2019)[1] <- "Year"
+LCt2.extract <- data.frame(LCt2.extract, Year2019)
+names(LCt2.extract)[1] <- "Variable"
+names(LCt2.extract)[2] <- "Value"
+
+LCt.1y2 <- rbind(LCt2.extract, LCt1.extract)
+
+LCt.1y2$Value <- as.numeric(LCt.1y2$Value)
+
+LCt.1y2.plot <-
+	ggplot(data = LCt.1y2, aes(
+		x = Year,
+		y = Value,
+		color = factor(Variable)
+	)) +
+	geom_line(aes(linetype = "solid"), size = 1) +
+	scale_x_continuous(limits = c(2006, 2019), breaks = c(2006, 2019)) +
+	scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10)) +
+	xlab("Año de análisis") + ylab ("Porcentaje de cobertura") +
+	theme_igray() +
+	scale_colour_gdocs() +
+	theme(
+		axis.text.y = element_text(
+			angle = 45,
+			size = rel(1),
+			hjust = 0.5
+		),
+		axis.text.x = element_text(
+			angle = 0,
+			size = rel (1.0),
+			hjust = 0.5
+		)
+	) +
+	labs(colour = "Coberturas")
+
+ggplotly(LCt.1y2.plot)
+```
+
+## Uso del suelo en t1 vs uso del suelo en t2
+
+```{r}
+#| label: grafico-sankey-cobertura-t1-vs-cobertura-t2
+#| warning: false
+#| message: false 
+#| code-fold: true
+
+links <-
+	read.csv(file = "https://gitlab.com/mauvega/rio4/-/raw/master/linksT1UvT2U.csv", header =
+			TRUE, sep = ',')
+
+nodes <- data.frame(name = c(as.character(links$source),
+	as.character(links$target)) %>% unique())
+
+links$IDsource <- match(links$source, nodes$name)-1
+links$IDtarget <- match(links$target, nodes$name)-1
+
+g.UT1yUT2 <- sankeyNetwork(
+	Links = links,
+	Nodes = nodes,
+	Source = "IDsource",
+	Target = "IDtarget",
+	Value = "value",
+	NodeID = "name",
+	units = "hectáreas",
+	fontSize = 20,
+	nodeWidth = 30,
+	sinksRight = TRUE,
+	height = 3000,
+	width = 3000
+)
+
+g.UT1yUT2
 ```
