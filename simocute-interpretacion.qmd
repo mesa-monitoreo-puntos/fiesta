@@ -1,5 +1,5 @@
 ---
-title: "Ejercicio metodológico de interpretación de puntos de muestreo en el marco de SIMOCUTE"
+title: "SIMOCUTE - Ejercicio metodológico de interpretación de puntos de muestreo"
 subtitle: "Análisis de datos mediante R y FIESTA"
 format: 
   html:

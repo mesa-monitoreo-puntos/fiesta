@@ -1,5 +1,6 @@
 ---
-title: "Manglares"
+title: "CATIE - Interpretación de puntos de muestreo de manglares"
+subtitle: "Análisis de datos mediante R y FIESTA"
 format: 
   html:
     lang: es
@@ -8,18 +9,25 @@ format:
 ---
 
 # Resumen
-FIESTA es una biblioteca del lenguaje de programación R para análisis de datos de inventarios forestales basados en muestras. En este documento se explica el uso de FIESTA mediante un caso de ejemplo basado en un conjunto de datos de parcelas de monitoreo, ubicadas en la zona norte de Costa Rica.
+FIESTA es una biblioteca de software para análisis de datos de inventarios forestales. En este documento se explica el uso de FIESTA mediante un caso de ejemplo basado en un conjunto de datos de manglares interpretados por el CATIE.
 
 # Introducción
-FIESTA (*Forest Inventory Estimation and Analysis*) es una biblioteca de software, desarrollada en el lenguaje de programación R, para el análisis de datos de inventarios forestales basados en muestras. Es desarrollada por el Programa de Inventario y Análisis Forestal (FIA, por sus siglas en inglés) del Servicio Forestal del Departamento de Agricultura de los Estados Unidos.
+FIESTA (*Forest Inventory Estimation and Analysis*) es una biblioteca de software, desarrollada en el lenguaje de programación R, para el análisis de datos de inventarios forestales basados en muestras. Fue desarrollada por el Programa de Inventario y Análisis Forestal (FIA) del Servicio Forestal del Departamento de Agricultura (USDA) de los Estados Unidos.
 
-Este documento describe el procesamiento, mediante FIESTA, de un conjunto de datos de 26125 puntos de muestreo de 1045 parcelas de monitoreo, ubicadas en la zona norte de Costa Rica. 
+En este documento se detalla el análisis, mediante FIESTA, de un conjunto de datos de 43389 puntos de muestreo de manglares de Costa Rica. Estos datos fueron interpretados por el Centro Agronómico Tropical de Investigación y Enseñanza (CATIE).
 
-# Recursos
-- [Forest Inventory Estimation and Analysis (FIESTA)](https://usdaforestservice.github.io/FIESTA) (sitio oficial de FIESTA)
-- [FIESTA - Photo-Based Module](https://usdaforestservice.github.io/FIESTA/articles/FIESTA_tutorial_PB.html) (módulo de inventarios basados en fotografías de FIESTA)
+Para cada punto se interpretaron las variables:
 
-# Trabajo previo
+- Uso del suelo.
+
+La interpretación se realizó en varios tiempos, de los cuales se están considerando dos para este análisis:
+
+- t1: 1998.
+- t2: 2021.
+
+El documento fue desarrollado en el sistema de publicación técnica y científica [Quarto](https://quarto.org/), el cual combina código en R y sus salidas (tablas, gráficos, mapas) con texto en [Markdown](https://es.wikipedia.org/wiki/Markdown).
+
+# Trabajo previo al análisis
 
 ## Instalación de software
 
@@ -27,10 +35,10 @@ Este documento describe el procesamiento, mediante FIESTA, de un conjunto de dat
 Para trabajar con FIESTA, se debe instalar:
 
 - El [sistema base de R](https://www.r-project.org/). R es un lenguaje de programación enfocado en análisis estadístico y visualización de datos.
-- La interfaz de desarrollo integrada [RStudio Desktop](https://posit.co/download/rstudio-desktop/), la cual proporciona un editor de texto y otras herramientas para escribir programas en R y visualizar sus resultados, entre otras facilidades.
+- La interfaz de desarrollo integrada [RStudio Desktop](https://posit.co/download/rstudio-desktop/), la cual proporciona un editor de texto y otras herramientas para escribir programas en R y visualizar sus resultados, entre otras facilidades. También pueden emplearse otros ambientes de desarrollo que ofrecen características similares (ej. [Visual Studio Code](https://code.visualstudio.com/)).
 
 #### Versión mínima de R
-De acuerdo con su documentación, la versión mínima de R que requiere FIESTA, a la fecha de escritura de este documento (2023-12-02), es la 4.2.0. Puede consultar la versión que tiene instalada al ejecutar el siguiente comando en la consola de R:
+De acuerdo con su documentación, la versión mínima de R que requiere FIESTA, a la fecha de escritura de este documento (2023-12-02), es la 4.2.0. Puede consultar la versión de su instalación al ejecutar el siguiente comando en la consola de R:
 
 ```{r}
 #| label: version-r
@@ -41,14 +49,14 @@ De acuerdo con su documentación, la versión mínima de R que requiere FIESTA, 
 R.version.string
 ```
 
-La salida del comando anterior debe indicar que su versión de R es mayor o igual a 4.2.0.
+La salida del comando anterior debe indicar que la versión de su instalación de R es mayor o igual a 4.2.0.
 
 ### Paquetes de R
 
 #### FIESTA
 El paquete [FIESTA](https://cran.r-project.org/package=FIESTA) está disponible en [CRAN (Comprehensive R Archive Network)](https://cran.r-project.org/), un repositorio en línea que alberga una amplia colección de paquetes y extensiones para el lenguaje de programación R, lo que facilita su instalación y actualización a nuevas versiones.
 
-Para usar FIESTA, debe instalarse primero en una interfaz de R. Puede utilizar la función `install.packages()`.
+Para usar FIESTA, debe instalarse primero. Puede utilizar la función `install.packages()`.
 
 ```{r}
 #| label: instalacion-paquetes-fiesta
@@ -74,7 +82,7 @@ library(FIESTA)
 Si el comando anterior no genera ningún mensaje de error, FIESTA debe haberse instalado adecuadamente.
 
 #### Otros
-Además de FIESTA, se recomienda instalar los siguientes paquetes para procesamiento de datos y visualización de resultados.
+Además de FIESTA, se recomienda instalar los siguientes paquetes para procesamiento y visualización de datos.
 
 ```{r}
 #| label: instalacion-paquetes-otros
@@ -131,11 +139,11 @@ library(sf) # se instala con FIESTA
 ```
 
 ## Obtención de este repositorio
-Este documento forma parte de un repositorio en [GitHub](https://github.com/), una plataforma en línea para compartir código fuente de aplicaciones, basada en el sistema de control de versiones [Git](https://git-scm.com/). El repositorio contiene el código fuente del documento y los datos que se utilizan en los ejemplos. Su dirección es [https://github.com/mesa-monitoreo-puntos/fiesta](https://github.com/mesa-monitoreo-puntos/fiesta).
+Este documento, junto con otros similares, forma parte de un repositorio en [GitHub](https://github.com/), una plataforma en línea para compartir código fuente de aplicaciones, basada en el sistema de control de versiones [Git](https://git-scm.com/). El repositorio contiene el código fuente del documento y los datos que se utilizan en los ejemplos. Su dirección es [https://github.com/mesa-monitoreo-puntos/fiesta](https://github.com/mesa-monitoreo-puntos/fiesta).
 
 Puede descargar el repositorio, como un archivo ZIP, de [https://github.com/mesa-monitoreo-puntos/fiesta/archive/refs/heads/main.zip](https://github.com/mesa-monitoreo-puntos/fiesta/archive/refs/heads/main.zip)
 
-También puede "clonarlo" mediante el comando `clone` de Git:
+También puede "clonar" el repositorio mediante el comando `clone` de Git:
 
 ```shell
 # Clonación de este repositorio
@@ -198,18 +206,10 @@ COLORES_USO <-
 	)
 
 # Área de estudio en hectáreas
-AREA_ESTUDIO = 318167.67
 ```
 
 # Carga y limpieza de datos
-El conjunto de datos que se utiliza en este documento para ilustrar el uso de FIESTA es el producto de la interpretación de 1045 parcelas en la zona norte de Costa Rica. Cada parcela contiene 25 puntos, por lo que el total de puntos es 26125. Cada punto se interpretó, mediante imágenes satelitales, en dos tiempos:
-
-- Tiempo 1 (t1): entre 2005 y 2007.
-- Tiempo 2 (t2): en 2019.
-
-La interpretación fue realizada por un equipo de 26 personas de diferentes instituciones y organizaciones.
-
-Los datos de puntos de muestreo se cargan de un archivo CSV y los nombres de las columnas se "limpian" para evitar números al inicio y otros problemas que dificultan su manejo.
+Los datos de los puntos de muestreo se proporcionaron en un archivo CSV. En el siguiente bloque de código se cargan en el dataframe `puntos`. Los nombres de las columnas se "limpian" para evitar la presencia de números al inicio y otros problemas que dificultan su manejo. Los valores nulos (`NA`) se convierten a hileras de texto. 
 
 ```{r}
 #| label: carga-datos-puntos-muestreo
@@ -229,7 +229,7 @@ puntos <-
 		sampleid = as.numeric(sampleid)
 	)
 
-# Adición de una columna con números consecutivos
+# Adición de una columna con números consecutivos, como identificador único
 puntos <- 
 	puntos |>
   mutate(
@@ -261,7 +261,7 @@ puntos <-
 	puntos |> 
 	mutate(
 		t1_uso = replace_na(t1_uso, "Nulo"),
-		t1_uso = replace_na(t1_uso, "Nulo")
+		t2_uso = replace_na(t2_uso, "Nulo")
 	)
 
 # Coversión de t1_uso y t2_uso a factores
@@ -272,6 +272,15 @@ puntos <-
 		t2_uso = factor(t2_uso, levels = unique(t2_uso))		
 	)
 ```
+
+El dataframe `puntos` contiene más de 40 columnas, provenientes del archivo CSV. Algunas de las más importantes para efectos de este análisis son:
+
+- `plot_id`: identificador de la parcela.
+- `sample_id`: identificador del punto de muestreo.
+- `t1_uso`: interpretación de la variable de uso del suelo en t1.
+- `t2_uso`: interpretación de la variable de uso del suelo en t2.
+
+La siguiente tabla muestra las columnas mencionadas.
 
 ```{r}
 #| label: tabla-datos-puntos-muestreo
@@ -297,11 +306,14 @@ puntos |>
 	)
 ```
 
-# Análisis con paquetes clásicos de R
+# Análisis con paquetes básicos de R
+En esta sección, se analizan los datos con paquetes de R como los de la colección de [Tidyverse](https://www.tidyverse.org/), [Plotly R](https://plotly.com/r/) para gráficos estadísticos interactivos y [Leaflet R](https://rstudio.github.io/leaflet/) para mapas interactivos.
 
 ## Uso del suelo
 
 ### Mapa
+El siguiente mapa interactivo, implementado con el paquete Leaflet, muestra la distribución espacial de la interpretación de la variable de uso del suelo en t1 y t2.
+
 ```{r}
 #| label: mapa-puntos-muestreo-uso
 #| warning: false
@@ -390,7 +402,10 @@ leaflet() |>
 	)
 ```
 
-### Distribución de puntos de muestreo en t1
+### Distribución de puntos de muestreo en clases de uso
+La distribución de los puntos de muestreo en clases de uso del suelo, en t1 y t2, se muestra en un gráfico de barras y en un gráfico de pastel, ambos elaborados con el paquete Plotly.
+
+#### t1
 
 ```{r}
 #| label: grafico-barras-uso-t1
@@ -458,7 +473,7 @@ plot_ly(
 add_pie()
 ```
 
-### Distribución de puntos de muestreo en t2
+#### t2
 
 ```{r}
 #| label: grafico-barras-uso-t2
@@ -527,11 +542,16 @@ add_pie()
 ```
 
 # Análisis con el paquete FIESTA
+En esta sección se analizan los datos con el paquete FIESTA y su módulo de [inventarios basados en fotografías (*Photo-Based*)](https://usdaforestservice.github.io/FIESTA/articles/FIESTA_tutorial_PB.html). Este módulo calcula estimaciones de población y errores de muestreo asociados. A diferencia de los estimadores tradicionales del libro verde de FIA (utilizados en otros módulos de FIESTA), que se construyeron basándose en el paradigma de muestreo finito utilizando parcelas de muestra con área distinta, los estimadores basados en fotos se construyeron en el contexto del paradigma de muestreo infinito, junto con el concepto de una región de soporte. FIESTA incluye estimadores no proporcionales para estimaciones de área y cobertura porcentual por dominio, y estimadores de media de cocientes para estimaciones de área y cobertura porcentual dentro del dominio, y soporta la post-estratificación para reducir la varianza.
 
+Se calcula el porcentaje de cada clase de uso del suelo en cada parcela y el porcentaje total de cada clase en el área de estudio, tanto en t1 como en t2. Por último, se analiza el flujo de cambios de t1 a t2.
 
-## Uso de la tierra
+## Uso del suelo
 
-### Porcentaje de usos por parcela en t1
+### Porcentaje de usos por parcela
+Se utiliza la función [datPBpnt2pct](https://rdrr.io/cran/FIESTA/man/datPBpnt2pct.html) para transponer los datos de puntos a porcentajes en cada parcela de monitoreo.
+
+#### t1
 
 ```{r}
 #| label: transposicion-puntos-porcentajes-uso-parcela-t1
@@ -562,12 +582,12 @@ porcentaje_uso_parcela_t1 |>
   )
 ```
 
-### Porcentaje de usos por parcela en t2
+#### t2
 
 ```{r}
 #| label: transposicion-puntos-porcentajes-uso-parcela-t2
 #| warning: false
-#| message: false
+#| message: false 
 
 # Transposición de puntos a porcentajes de uso por parcela en t2
 porcentaje_uso_parcela_t2 <- 
@@ -593,7 +613,8 @@ porcentaje_uso_parcela_t2 |>
   )
 ```
 
-### Porcentaje total de usos en t1
+### Porcentaje total de usos
+La función [modPBpop()](https://rdrr.io/cran/FIESTA/man/modPBpop.html) genera datos de poblaciones, los cuales se utilizan posteriormente para calcular el porcentaje total (en todas las parcelas) en t1 y t2.
 
 ```{r}
 #| label: poblacion-uso-total
@@ -605,6 +626,8 @@ PBpopdat <- modPBpop(pnt = puntos,
 	pltassgnid = "plot_id",
 	pntid = "sample_id")
 ```
+
+#### t1
 
 ```{r}
 #| label: estimacion-uso-total-t1
@@ -630,13 +653,13 @@ results.LCt1 |>
   	caption = "Distribución de usos en t1",
   	rownames = FALSE,
     options = list(
-      pageLength = 5,
+      pageLength = 10,
       language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
     )
   )
 ```
 
-### Porcentaje total de usos en t2
+#### t2
 
 ```{r}
 #| label: estimacion-uso-total-t2
@@ -662,26 +685,24 @@ results.LCt2 |>
   	caption = "Distribución de usos en t2",
   	rownames = FALSE,
     options = list(
-      pageLength = 5,
+      pageLength = 10,
       language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
     )
   )
 ```
 
-### Cambios en las áreas de usos de t1 a t2
+### Cambios porcentuales en usos de t1 a t2
 
 ```{r}
-#| label: uso-t1-vs-uso-t2
+#| label: uso-t1-vs-cobertura-t2-pct
 #| warning: false
 #| message: false 
-#| eval: false
 
 PBpoparea <- 
 	modPBpop(
 	  pnt = puntos,
 	  pltassgnid = "plot_id",
-	  pntid = "sample_id",
-	  unitarea = AREA_ESTUDIO
+	  pntid = "sample_id"
   )
 
 # Uso en t1 vs uso en t2
@@ -689,18 +710,16 @@ usoT1vT2 <-
 	modPB(
 		PBpopdat = PBpoparea,
 	  rowvar = "t1_uso",
-	  colvar = "t2_uso",
-		tabtype = "AREA"
+	  colvar = "t2_uso"
 	)
 ```
 
 ```{r}
-#| label: tabla-uso-t1-vs-uso-t2
+#| label: tabla-uso-t1-vs-uso-t2-pct
 #| warning: false
 #| message: false 
 #| code-fold: true
 #| code-summary: "Código para el despliegue de la tabla"
-#| eval: false
 
 # Despliegue de datos en una tabla
 usoT1vT2$est |>
@@ -708,13 +727,92 @@ usoT1vT2$est |>
   	caption = "Uso en t1 vs uso en t2",
   	rownames = FALSE,
     options = list(
-      pageLength = 6,
+      pageLength = 10,
       language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
     )
   )
 ```
 
-### Flujo de cambios de uso de la tierra de t1 a t2
+Parte de la información de la tabla anterior se muestra en el siguiente gráfico de líneas.
+
+```{r}
+#| label: grafico-lineas-uso-t1-vs-uso-t2
+#| warning: false
+#| message: false 
+#| code-fold: true
+#| code-summary: "Código para el despliegue del gráfico de líneas"
+
+LCt1.extract <- data.frame(LCt1$est$t1_uso, LCt1$est$Estimate)
+
+# Eliminación de la fila "Total"
+LCt1.extract <- 
+	LCt1.extract |>
+  filter(LCt1.est.t1_uso != "Total")
+
+Year1998 <- as.data.frame(c(1998, 1998, 1998, 1998, 1998, 1998, 1998))
+names(Year1998)[1] <- "Year"
+LCt1.extract <- data.frame(LCt1.extract, Year1998)
+names(LCt1.extract)[1] <- "Variable"
+names(LCt1.extract)[2] <- "Value"
+
+
+LCt2.extract <- data.frame(LCt2$est$t2_uso, LCt2$est$Estimate)
+
+# Eliminación de la fila "Total"
+LCt2.extract <- 
+	LCt2.extract |>
+  filter(LCt2.est.t2_uso != "Total")
+
+Year2021 <- as.data.frame(c(2021, 2021, 2021, 2021, 2021, 2021, 2021))
+names(Year2021)[1] <- "Year"
+LCt2.extract <- data.frame(LCt2.extract, Year2021)
+names(LCt2.extract)[1] <- "Variable"
+names(LCt2.extract)[2] <- "Value"
+
+LCt.1y2 <- rbind(LCt2.extract, LCt1.extract)
+
+LCt.1y2$Value <- as.numeric(LCt.1y2$Value)
+
+# Gráfico de líneas en ggplot2
+grafico_lineas <-
+	ggplot(data = LCt.1y2, aes(
+		x = Year,
+		y = Value,
+		color = factor(Variable)
+	)) +
+	geom_line(size = 1) +
+	scale_x_continuous(limits = c(1998, 2021), breaks = c(1998, 2021)) +
+	scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 10)) +
+	xlab("Año de análisis") + 
+	ylab ("Porcentaje de uso") +
+  scale_colour_manual(values = 
+    c("Bosque"              = COLOR_BOSQUE,
+      "Humedal"             = COLOR_HUMEDAL,
+      "No determinable"     = COLOR_NO_DETERMINABLE,
+    	"Pastos"              = COLOR_PASTOS,
+    	"Agricultura"         = COLOR_AGRICULTURA,
+    	"Otras clases"        = COLOR_OTRAS_CLASES,
+    	"Plantación Forestal" = COLOR_PLANTACION_FORESTAL,
+    	"Nulo"                = COLOR_NULO
+    )
+  ) +
+	labs(colour = "Uso del suelo") +
+	theme_clean() +
+	theme(legend.position = "top")
+
+ggplotly(grafico_lineas) |> 
+  config(locale = 'es') |>
+  layout(
+    showlegend = TRUE,
+    legend = list(
+      title = list(text = ''),
+      bordercolor = 'rgba(0,0,0,0)'
+    )
+  ) 
+```
+
+### Transiciones de t1 a t2
+El siguiente gráfico de Sankey muestra las cantidades de puntos que han cambiado en las clases entre t1 y t2.
 
 ```{r}
 #| label: grafico-sankey-uso
@@ -822,3 +920,7 @@ grafico_sankey <-
 
 grafico_sankey
 ```
+
+# Recursos de referencia y consulta
+- [Forest Inventory Estimation and Analysis (FIESTA)](https://usdaforestservice.github.io/FIESTA) (sitio oficial de FIESTA)
+- [FIESTA - Photo-Based Module](https://usdaforestservice.github.io/FIESTA/articles/FIESTA_tutorial_PB.html) (módulo de inventarios basados en fotografías de FIESTA)

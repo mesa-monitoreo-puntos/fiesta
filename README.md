@@ -4,8 +4,8 @@
 ## Ejemplos de uso
 El uso de FIESTA se explica y ejemplifica en este repositorio mediante su aplicación en dos conjuntos de datos:
 
-- [Ejercicio metodológico de interpretación de puntos en el marco de SIMOCUTE](https://mesa-monitoreo-puntos.github.io/fiesta/simocute-interpretacion.html)
-- [Muestreo de manglares del CATIE](https://mesa-monitoreo-puntos.github.io/fiesta/catie-manglares.html)
+- [SIMOCUTE - Ejercicio metodológico de interpretación de puntos de muestreo](https://mesa-monitoreo-puntos.github.io/fiesta/simocute-interpretacion.html)
+- [CATIE - Interpretación de puntos de muestreo de manglares](https://mesa-monitoreo-puntos.github.io/fiesta/catie-manglares.html)
 
 ## Algunos aspectos a destacar
 - Se simplificó el proceso de instalación de FIESTA, gracias a que ahora está disponible en CRAN.
