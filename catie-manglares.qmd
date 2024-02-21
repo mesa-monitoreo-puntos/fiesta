@@ -9,7 +9,7 @@ format:
 ---
 
 # Resumen
-FIESTA es una biblioteca de software para análisis de datos de inventarios forestales. En este documento se explica el uso de FIESTA mediante un caso de ejemplo basado en un conjunto de datos de manglares interpretados por el CATIE.
+FIESTA es una biblioteca de software para análisis de datos de inventarios forestales. En este documento se explica el uso de FIESTA mediante un caso de ejemplo basado en un conjunto de datos de manglares interpretados por el **CATIE**.
 
 # Introducción
 FIESTA (*Forest Inventory Estimation and Analysis*) es una biblioteca de software, desarrollada en el lenguaje de programación R, para el análisis de datos de inventarios forestales basados en muestras. Fue desarrollada por el Programa de Inventario y Análisis Forestal (FIA) del Servicio Forestal del Departamento de Agricultura (USDA) de los Estados Unidos.
